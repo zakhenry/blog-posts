@@ -1,0 +1,17 @@
+{
+  "name": "blog-posts",
+  "version": "1.0.0",
+  "description": "My blog posts",
+  "main": "index.js",
+  "repository": "git@github.com:zakhenry/blog-posts.git",
+  "author": "Zak Henry <zak.henry@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "hello": "echo hello world",
+    "embedme": "embedme"
+  },
+  "devDependencies": {
+    "embedme": "1.1.0"
+  }
+}
