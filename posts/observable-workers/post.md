@@ -23,10 +23,8 @@ Fortunately, `Web Workers` are the solution to all this - they allow you to sche
 
 ## Creating your first Web Worker in Angular
 The worker API is relatively simple - in Typescript you can create a new worker with just
-
+<!-- embedme src/readme/basic-worker.ts --> 
 ```ts
-// src/readme/basic-worker.ts
-
 const myWorker = new Worker('./worker.js');
 
 ```
@@ -52,9 +50,8 @@ We're prompted for a name, so we will call it demo.
 
 Angular CLI will now update `tsconfig.app.json` and `angular.json` to enable web worker support, and create us a new `demo.worker.ts`:
 
+<!-- embedme src/readme/initial-angular-cli-worker/demo.worker.ts -->
 ```ts
-// src/readme/initial-angular-cli-worker/demo.worker.ts
-
 /// <reference lib="webworker" />
 
 addEventListener('message', ({ data }) => {
@@ -65,10 +62,8 @@ addEventListener('message', ({ data }) => {
 ```
 
 To get this worker running, lets update our `AppComponent`:
-
+<!-- embedme src/readme/initial-angular-cli-worker/app.component.ts -->
 ```ts
-// src/readme/initial-angular-cli-worker/app.component.ts
-
 import { Component } from '@angular/core';
 
 @Component({
@@ -96,9 +91,8 @@ export class AppComponent {
 
 And the template:
 
+<!-- embedme src/readme/initial-angular-cli-worker/app.component.html -->
 ```html
-<!-- src/readme/initial-angular-cli-worker/app.component.html -->
-
 <button (click)="runWorker()">Run Worker</button>
 
 ```
@@ -140,10 +134,8 @@ I should note that this library doesn't actually depend on Angular at all, and w
  ```
  
 First of all, we'll update the `AppComponent`
- 
+ <!-- embedme src/readme/observable-webworker-implementation/app.component.ts -->
 ```ts
-// src/readme/observable-webworker-implementation/app.component.ts
-
 import { Component } from '@angular/core';
 import { fromWorker } from 'observable-webworker';
 import { Observable, of } from 'rxjs';
@@ -175,9 +167,8 @@ The second argument `input$` is a simple stream of messages that will go to the 
 
 Now for the worker:
  
+<!-- embedme src/readme/observable-webworker-implementation/demo.worker.ts -->
 ```ts
-// src/readme/observable-webworker-implementation/demo.worker.ts
-
 import { DoWork, ObservableWorker } from 'observable-webworker';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
