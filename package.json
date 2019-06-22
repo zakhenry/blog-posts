@@ -11,6 +11,9 @@
     "embedme": "embedme posts/**/*.md"
   },
   "devDependencies": {
-    "embedme": "1.6.0"
+    "@angular/bazel": "^8.0.2",
+    "embedme": "1.6.0",
+    "prettier": "^1.18.2",
+    "ts-node": "^8.3.0"
   }
 }
