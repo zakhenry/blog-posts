@@ -1,0 +1,5 @@
+[ 'we’re all mad here (this will be the first result)' ]
+[
+  'we’re all mad here (this will be the first result)',
+  'we’re all mad here (this will be the second result)'
+]
