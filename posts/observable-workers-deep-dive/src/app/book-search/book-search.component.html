@@ -1,0 +1,11 @@
+<p>
+  book-search works!
+</p>
+
+<select [formControl]="bookSelectionFormControl">
+  <option *ngFor="let book of bookChoices" [value]="book.url">{{book.name}}</option>
+</select>
+
+<input type="text" [formControl]="searchTermFormControl" />
+
+<pre highlight="">{{searchResults$ | async |json}}</pre>

@@ -339,4 +339,16 @@ Back to the output analysis, in the line marked `7` we see we've switched to fet
 
 Okay, we're in a state now where we're pretty confident in the general data flow, let's start building the application.
 
+So far we've just been working with a single typescript file, to work though our ideas, but now we're going to jump into using a framework as this is much more realistic to our real world problems we hope to solve by understanding this article.
+
+I'm going to use Angular, but if you're a React or other awesome framework user don't fret as this is going to be fairly framework agnostic anyway. If you've made it this far, it's probably safe to assume you have the basics down pat so I'll gloss over that.
+
+I love working on the bleeding edge, so we will use both Bazel and Ivy.
+```
+ng new observable-workers-deep-dive --collection=@angular/bazel --experimental-ivy=true
+```
+
+```
+ng generate component book-search
+```
 
