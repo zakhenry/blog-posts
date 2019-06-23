@@ -33,7 +33,12 @@ export class BookSearchHandler {
   }
 
   private getSearchResults(searchTerm: string, bookText: string): Observable<string> {
-    return from([searchTerm, `book is ${bookText.length} chars long`]);
+
+    const paragraphs = bookText.split('\n\n');
+
+    const results = paragraphs.filter(p => p.indexOf(searchTerm) >= 0);
+
+    return from([searchTerm, `book is ${bookText.length} chars long, ${results.length} paragraphs match`, ...results.slice(0, 10)]);
   }
 
   private fetchFile(url: string): Observable<string> {

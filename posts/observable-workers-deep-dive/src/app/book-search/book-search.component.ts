@@ -5,8 +5,8 @@ import { BookSearchHandler } from './book-search.service';
 
 // @todo mirror these to github pages
 export enum BookChoice {
-  ALICE_IN_WONDERLAND = 'https://www.gutenberg.org/files/11/11-0.txt',
-  SHERLOCK_HOLMES = 'https://www.gutenberg.org/files/1661/1661-0.txt',
+  ALICE_IN_WONDERLAND = 'https://raw.githubusercontent.com/zakhenry/blog-posts/master/posts/observable-workers-deep-dive/src/assets/alice.txt',
+  SHERLOCK_HOLMES = 'https://raw.githubusercontent.com/zakhenry/blog-posts/master/posts/observable-workers-deep-dive/src/assets/sherlock.txt',
 }
 
 @Component({
