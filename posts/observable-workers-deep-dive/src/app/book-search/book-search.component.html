@@ -8,4 +8,7 @@
 
 <input type="text" [formControl]="searchTermFormControl" />
 
-<pre highlight="">{{searchResults$ | async |json}}</pre>
+<ng-container *ngFor="let paragraph of searchResults$ | async">
+  <hr>
+  <blockquote>{{paragraph}}</blockquote>
+</ng-container>

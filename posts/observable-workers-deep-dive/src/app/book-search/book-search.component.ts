@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { Observable } from 'rxjs';
-import { BookSearchHandler } from './book-search.service';
+import { BookSearchService } from './book-search.service';
 
 // @todo mirror these to github pages
 export enum BookChoice {
@@ -39,5 +39,5 @@ export class BookSearchComponent {
     this.userSearchTerm$,
   );
 
-  constructor(private bookSearchHandler: BookSearchHandler) {}
+  constructor(private bookSearchHandler: BookSearchService) {}
 }
