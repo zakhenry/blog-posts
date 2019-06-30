@@ -1,0 +1,25 @@
+<h2>{{ componentName }}</h2>
+
+<select [formControl]="bookSelectionFormControl">
+  <option *ngFor="let book of bookChoices" [value]="book.url">
+    {{ book.name }}
+  </option>
+</select>
+
+<input type="text" [formControl]="searchTermFormControl" />
+
+<span *ngIf="searchResultProgress$ | async as searchResultProgress">
+  Progress: {{ searchResultProgress[0] }} / {{ searchResultProgress[1] }} ({{
+    searchResultProgress[0] / searchResultProgress[1] | percent
+  }})
+</span>
+
+<ng-container *ngFor="let matchingParagraph of searchResultParagraphs$ | async">
+  <hr />
+  <blockquote>
+    <span>{{ matchingParagraph.before }}</span>
+    <strong>{{ matchingParagraph.match }}</strong>
+    <span>{{ matchingParagraph.after }}</span>
+    <footer>Score: {{ matchingParagraph.score }}</footer>
+  </blockquote>
+</ng-container>

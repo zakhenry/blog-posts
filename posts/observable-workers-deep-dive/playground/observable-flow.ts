@@ -1,13 +1,13 @@
-import { from, Observable, of } from "rxjs";
-import { scan, shareReplay, switchMap } from "rxjs/operators";
+import { from, Observable, of } from 'rxjs';
+import { scan, shareReplay, switchMap } from 'rxjs/operators';
 
 /**
  * First off, we create a quick enum of the books we will use as a demo. Later
  * we will update the urls to be correct
  */
 enum BookChoice {
-  ALICE_IN_WONDERLAND = "http://some-url-to-alice-in-wonderland-text",
-  SHERLOCK_HOLMES = "http://some-url-to-sherlock-holmes-text"
+  ALICE_IN_WONDERLAND = 'http://some-url-to-alice-in-wonderland-text',
+  SHERLOCK_HOLMES = 'http://some-url-to-sherlock-holmes-text',
 }
 
 /**
@@ -46,11 +46,11 @@ function getBookText(bookChoice: BookChoice): Observable<string> {
  */
 function getSearchResults(
   searchTerm: string,
-  bookText: string
+  bookText: string,
 ): Observable<string> {
   return from([
-    searchTerm + " (this will be the first result)",
-    searchTerm + " (this will be the second result)"
+    searchTerm + ' (this will be the first result)',
+    searchTerm + ' (this will be the second result)',
   ]);
 }
 
@@ -79,11 +79,11 @@ const searchResults$ = userBookSelection$.pipe(
         getSearchResults(searchTerm, bookText).pipe(
           scan((searchResults: string[], searchResult) => {
             return [...searchResults, searchResult];
-          }, [])
-        )
-      )
+          }, []),
+        ),
+      ),
     );
-  })
+  }),
 );
 
 /**

@@ -1,14 +1,27 @@
-import { asapScheduler, asyncScheduler, from, Observable } from 'rxjs';
-import { finalize, map, observeOn, scan, startWith } from 'rxjs/operators';
+import { asyncScheduler, from, Observable } from 'rxjs';
+import { map, observeOn, scan, startWith } from 'rxjs/operators';
 import {
   FuzzyMatchSimilarity,
   fuzzySubstringSimilarity,
-} from '../../../playground/fuzzy-substring';
+} from './fuzzy-substring';
 
 interface SearchMatch {
   paragraph: string;
   paragraphNumber: number;
   searchMatch: FuzzyMatchSimilarity;
+}
+
+function getSearchResults(
+  searchTerm: string,
+  paragraphs: string[],
+): Observable<SearchMatch> {
+  return from(paragraphs).pipe(
+    observeOn(asyncScheduler),
+    map((paragraph, index) => {
+      const searchMatch = fuzzySubstringSimilarity(searchTerm, paragraph);
+      return { searchMatch, paragraph, paragraphNumber: index };
+    }),
+  );
 }
 
 export interface MatchingParagraph {
@@ -24,20 +37,7 @@ export interface SearchResults {
   paragraphCount: number;
 }
 
-export function getSearchResults(
-  searchTerm: string,
-  paragraphs: string[],
-): Observable<SearchMatch> {
-  return from(paragraphs).pipe(
-    observeOn(asyncScheduler),
-    map((paragraph, index) => {
-      const searchMatch = fuzzySubstringSimilarity(searchTerm, paragraph);
-      return { searchMatch, paragraph, paragraphNumber: index };
-    }),
-  );
-}
-
-export function accumulateResults(paragraphCount: number) {
+function accumulateResults(paragraphCount: number) {
   return (obs$: Observable<SearchMatch>): Observable<SearchResults> => {
     return obs$.pipe(
       scan((searchResults: SearchMatch[], searchResult: SearchMatch) => {
@@ -74,6 +74,16 @@ export function accumulateResults(paragraphCount: number) {
       ),
     );
   };
+}
+
+export function getAccumulatedSearchResults(
+  searchTerm: string,
+  bookText: string,
+): Observable<SearchResults> {
+  const paragraphs = bookText.split('\n\n');
+  return getSearchResults(searchTerm, paragraphs).pipe(
+    accumulateResults(paragraphs.length),
+  );
 }
 
 export interface WorkerInput {

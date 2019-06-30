@@ -1,7 +1,7 @@
 import { from, Observable, of } from 'rxjs';
 import {
   concatMap,
-  delay, filter, finalize,
+  delay,
   map,
   pairwise,
   scan,

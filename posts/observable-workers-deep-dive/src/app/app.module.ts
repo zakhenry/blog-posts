@@ -4,21 +4,13 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppComponent } from './app.component';
-import { BookSearchWorkerComponent } from './book-search/book-search-worker.component';
-import { BookSearchComponent } from './book-search/book-search.component';
+import { BookSearchWorkerComponent } from './book-search/worker-thread/book-search-worker.component';
+import { BookSearchComponent } from './book-search/main-thread/book-search.component';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    BookSearchComponent,
-    BookSearchWorkerComponent
-  ],
-  imports: [
-    BrowserModule,
-    ReactiveFormsModule,
-    HttpClientModule,
-  ],
+  declarations: [AppComponent, BookSearchComponent, BookSearchWorkerComponent],
+  imports: [BrowserModule, ReactiveFormsModule, HttpClientModule],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

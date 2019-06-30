@@ -13,7 +13,6 @@ export interface FuzzyMatchSimilarity extends FuzzyMatch {
  * Modified from http://ginstrom.com/scribbles/2007/12/01/fuzzy-substring-matching-with-levenshtein-distance-in-python
  */
 export function fuzzySubstring(needle: string, haystack: string): FuzzyMatch {
-
   // if the needle is in the haystack, the distance is 0
   const startIndex = haystack.indexOf(needle);
   if (startIndex >= 0) {
@@ -54,7 +53,7 @@ export function fuzzySubstring(needle: string, haystack: string): FuzzyMatch {
   }
 
   let minDistance = row1[0];
-  for(let i = 0; i < row1.length; i++) {
+  for (let i = 0; i < row1.length; i++) {
     minDistance = Math.min(minDistance, row1[i]);
   }
 
@@ -62,32 +61,27 @@ export function fuzzySubstring(needle: string, haystack: string): FuzzyMatch {
 
   return {
     substringDistance: minDistance,
-    startIndex: minIndex-needle.length,
+    // @todo resolve how to get the substring reliably this is close but inaccurate
+    startIndex: minIndex - needle.length,
     endIndex: minIndex,
   };
 }
 
-export function fuzzySubstringSimilarity(needle: string, haystack: string): FuzzyMatchSimilarity {
-
+export function fuzzySubstringSimilarity(
+  needle: string,
+  haystack: string,
+): FuzzyMatchSimilarity {
   const fuzzyMatch = fuzzySubstring(needle, haystack);
 
   if (fuzzyMatch.substringDistance === 0) {
-
     return {
       ...fuzzyMatch,
       similarityScore: 1,
-    }
-
+    };
   }
 
   return {
     ...fuzzyMatch,
-    similarityScore: 1 - (fuzzyMatch.substringDistance / needle.length),
-  }
+    similarityScore: 1 - fuzzyMatch.substringDistance / needle.length,
+  };
 }
-
-console.time('fuzzySubstring');
-const distance = fuzzySubstringSimilarity('ttl three legged fob', 'ly she came upon a little three-legged table, all made of solid glass; ')
-console.timeEnd('fuzzySubstring');
-
-console.log(`Similarity: `, distance);

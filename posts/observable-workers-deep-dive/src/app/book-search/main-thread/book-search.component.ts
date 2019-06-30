@@ -3,9 +3,8 @@ import { FormControl } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BookSearchService } from './book-search.service';
-import { MatchingParagraph, SearchResults } from './book-search.utils';
+import { MatchingParagraph, SearchResults } from '../common/book-search.utils';
 
-// @todo mirror these to github pages
 export enum BookChoice {
   ALICE_IN_WONDERLAND = 'https://raw.githubusercontent.com/zakhenry/blog-posts/master/posts/observable-workers-deep-dive/src/assets/alice.txt',
   SHERLOCK_HOLMES = 'https://raw.githubusercontent.com/zakhenry/blog-posts/master/posts/observable-workers-deep-dive/src/assets/sherlock.txt',
@@ -18,7 +17,6 @@ export enum BookChoice {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BookSearchComponent {
-
   public componentName = 'Main thread search';
 
   public bookChoices = [
@@ -40,13 +38,22 @@ export class BookSearchComponent {
   public userSearchTerm$: Observable<string> = this.searchTermFormControl
     .valueChanges;
 
-  private searchResults$: Observable<SearchResults> = this.bookSearchHandler.search(
+  private searchResults$: Observable<
+    SearchResults
+  > = this.bookSearchHandler.search(
     this.userBookSelection$,
     this.userSearchTerm$,
   );
 
-  private searchResultParagraphs$ = this.searchResults$.pipe(map(result => result.paragraphs));
-  private searchResultProgress$ = this.searchResults$.pipe(map(result => [result.searchedParagraphCount, result.paragraphCount]));
+  public searchResultParagraphs$: Observable<
+    MatchingParagraph[]
+  > = this.searchResults$.pipe(map(result => result.paragraphs));
+
+  public searchResultProgress$: Observable<
+    [number, number]
+  > = this.searchResults$.pipe(
+    map(result => [result.searchedParagraphCount, result.paragraphCount]),
+  );
 
   constructor(private bookSearchHandler: BookSearchService) {}
 }
