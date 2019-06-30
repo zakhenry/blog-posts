@@ -18,7 +18,8 @@ const userBookSelection$ = of(BookChoice.ALICE_IN_WONDERLAND);
 
 /**
  * This observable represents the stream of search terms the user will enter
- * into a text box. We `shareReplay(1)`
+ * into a text box. We `shareReplay(1)` so that subsequent subscribers will get
+ * the latest value
  */
 const userSearchTerm$ = of(`we’re all mad here`).pipe(shareReplay(1));
 

@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { shareReplay, switchMap } from 'rxjs/operators';
+import { auditTime, share, shareReplay, switchMap } from 'rxjs/operators';
 import { BookChoice } from './book-search.component';
-import { accumulateResults, getSearchResults } from './book-search.utils';
+import { accumulateResults, getSearchResults, SearchResults } from './book-search.utils';
 
 @Injectable({
   providedIn: 'root',
@@ -14,29 +14,34 @@ export class BookSearchService {
   public search(
     bookSelection$: Observable<BookChoice>,
     searchTerm$: Observable<string>,
-  ): Observable<string[]> {
-    const search$ = searchTerm$.pipe(shareReplay(1));
-
-    return bookSelection$.pipe(
-      switchMap(url => this.processFile(url, search$)),
+  ): Observable<SearchResults> {
+    return this.processSearch(bookSelection$, searchTerm$).pipe(
+      auditTime(1000 / 60), // emit results at a maximum of 60fps
+      share(),
     );
   }
 
-  protected processFile(url: string, search$: Observable<string>): Observable<string[]> {
-    return this.fetchFile(url).pipe(
+  protected processSearch(
+    url$: Observable<string>,
+    search$: Observable<string>,
+  ): Observable<SearchResults> {
+
+    const sharedSearchTerm$ = search$.pipe(shareReplay(1));
+
+    return url$.pipe(
+      switchMap(url => this.http.get(url, { responseType: 'text' })),
       switchMap(bookText => {
-        return search$.pipe(
-          switchMap(searchTerm =>
-            getSearchResults(searchTerm, bookText).pipe(
-              accumulateResults()
-            ),
-          ),
+        return sharedSearchTerm$.pipe(
+          switchMap(searchTerm => {
+            const paragraphs = bookText.split('\n');
+
+            return getSearchResults(searchTerm, paragraphs).pipe(
+              accumulateResults(paragraphs.length),
+            );
+          }),
         );
       }),
     );
   }
 
-  private fetchFile(url: string): Observable<string> {
-    return this.http.get(url, { responseType: 'text' }).pipe(shareReplay(1));
-  }
 }

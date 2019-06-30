@@ -1,5 +1,5 @@
-import { from, Observable } from 'rxjs';
-import { map, scan, startWith } from 'rxjs/operators';
+import { asapScheduler, asyncScheduler, from, Observable } from 'rxjs';
+import { finalize, map, observeOn, scan, startWith } from 'rxjs/operators';
 import {
   FuzzyMatchSimilarity,
   fuzzySubstringSimilarity,
@@ -7,56 +7,71 @@ import {
 
 interface SearchMatch {
   paragraph: string;
+  paragraphNumber: number;
   searchMatch: FuzzyMatchSimilarity;
+}
+
+export interface MatchingParagraph {
+  before: string;
+  match: string;
+  after: string;
+  score: number;
+}
+
+export interface SearchResults {
+  paragraphs: MatchingParagraph[];
+  searchedParagraphCount: number;
+  paragraphCount: number;
 }
 
 export function getSearchResults(
   searchTerm: string,
-  bookText: string,
+  paragraphs: string[],
 ): Observable<SearchMatch> {
-  const paragraphs = bookText.split('\n\n');
-
   return from(paragraphs).pipe(
-    map(paragraph => {
+    observeOn(asyncScheduler),
+    map((paragraph, index) => {
       const searchMatch = fuzzySubstringSimilarity(searchTerm, paragraph);
-      return { searchMatch, paragraph };
+      return { searchMatch, paragraph, paragraphNumber: index };
     }),
   );
-
-  // return new Observable<SearchMatch>(observer => {
-  //   paragraphs.forEach((paragraph: string, index) => {
-  //     const searchMatch = fuzzySubstringSimilarity(searchTerm, paragraph);
-  //     observer.next({ searchMatch, paragraph });
-  //   });
-  //
-  //   observer.complete();
-  // });
 }
 
-// @todo move
-export function accumulateResults() {
-  return (obs$: Observable<SearchMatch>): Observable<string[]> => {
+export function accumulateResults(paragraphCount: number) {
+  return (obs$: Observable<SearchMatch>): Observable<SearchResults> => {
     return obs$.pipe(
       scan((searchResults: SearchMatch[], searchResult: SearchMatch) => {
-        return [...searchResults, searchResult];
+        searchResults.push(searchResult);
+        return searchResults;
       }, []),
-      map(searchMatches => {
-        return searchMatches
-          .sort(
-            (a, b) =>
-              b.searchMatch.similarityScore - a.searchMatch.similarityScore,
-          )
-          .slice(0, 10)
-          .map(({ searchMatch, paragraph }) => {
-            return `Similarity: ${searchMatch.similarityScore} Distance: ${
-              searchMatch.substringDistance
-            } Match: "${paragraph.slice(
-              searchMatch.startIndex,
-              searchMatch.endIndex,
-            )}" | ${paragraph}`;
-          });
-      }),
       startWith([]),
+      map(
+        (searchMatches: SearchMatch[]): SearchResults => {
+          const last = searchMatches[searchMatches.length - 1];
+
+          return {
+            searchedParagraphCount: last ? last.paragraphNumber : 0,
+            paragraphCount,
+            paragraphs: searchMatches
+              .sort(
+                (a, b) =>
+                  b.searchMatch.similarityScore - a.searchMatch.similarityScore,
+              )
+              .slice(0, 10)
+              .map(({ searchMatch, paragraph }) => {
+                return {
+                  score: searchMatch.similarityScore,
+                  match: paragraph.substring(
+                    searchMatch.startIndex,
+                    searchMatch.endIndex,
+                  ),
+                  before: paragraph.substring(0, searchMatch.startIndex),
+                  after: paragraph.substring(searchMatch.endIndex),
+                };
+              }),
+          };
+        },
+      ),
     );
   };
 }

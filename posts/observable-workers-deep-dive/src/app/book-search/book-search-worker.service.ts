@@ -1,21 +1,28 @@
 import { Injectable } from '@angular/core';
 import { fromWorker } from 'observable-webworker';
-import { Observable } from 'rxjs';
+import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BookSearchService } from './book-search.service';
-import { WorkerInput } from './book-search.utils';
-
-
+import { SearchResults, WorkerInput } from './book-search.utils';
 
 @Injectable({
   providedIn: 'root',
 })
 export class BookSearchWorkerService extends BookSearchService {
+  protected processSearch(
+    url$: Observable<string>,
+    search$: Observable<string>,
+  ): Observable<SearchResults> {
 
-  protected processFile(url: string, search$: Observable<string>): Observable<string[]> {
-    const input$: Observable<WorkerInput> = search$.pipe(map(searchTerm => ({searchTerm, url})));
+    console.log(`processing search`);
 
-    return fromWorker(() => new Worker('./book-search.worker', { type: 'module' }), input$);
+    const input$: Observable<WorkerInput> = combineLatest(url$, search$).pipe(
+      map(([url, searchTerm]) => ({ searchTerm, url })),
+    );
+
+    return fromWorker(
+      () => new Worker('./book-search.worker', { type: 'module' }),
+      input$,
+    );
   }
-
 }

@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { BookSearchService } from './book-search.service';
+import { MatchingParagraph, SearchResults } from './book-search.utils';
 
 // @todo mirror these to github pages
 export enum BookChoice {
@@ -13,8 +15,12 @@ export enum BookChoice {
   selector: 'app-book-search',
   templateUrl: './book-search.component.html',
   styleUrls: ['./book-search.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BookSearchComponent {
+
+  public componentName = 'Main thread search';
+
   public bookChoices = [
     {
       url: BookChoice.ALICE_IN_WONDERLAND,
@@ -34,10 +40,13 @@ export class BookSearchComponent {
   public userSearchTerm$: Observable<string> = this.searchTermFormControl
     .valueChanges;
 
-  public searchResults$: Observable<string[]> = this.bookSearchHandler.search(
+  private searchResults$: Observable<SearchResults> = this.bookSearchHandler.search(
     this.userBookSelection$,
     this.userSearchTerm$,
   );
+
+  private searchResultParagraphs$ = this.searchResults$.pipe(map(result => result.paragraphs));
+  private searchResultProgress$ = this.searchResults$.pipe(map(result => [result.searchedParagraphCount, result.paragraphCount]));
 
   constructor(private bookSearchHandler: BookSearchService) {}
 }
