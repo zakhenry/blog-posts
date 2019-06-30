@@ -1,0 +1,6 @@
+Similarity:  {
+  substringDistance: 2,
+  startIndex: 42,
+  endIndex: 59,
+  similarityScore: 0.8823529411764706
+}

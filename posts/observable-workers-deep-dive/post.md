@@ -897,6 +897,7 @@ Now in our `app.component.html` template we can insert this new service:
 
 So now we have our two implementations of book search - one in the main thread, the other backed by a worker thread service.
 
+### Worker Thread Test
 Let's test the new worker component! 
 
 ![Worker thread Demo](https://media.giphy.com/media/XAyCxNHS30wkyHcKq9/giphy.gif)
@@ -907,6 +908,21 @@ Also in this demo you can really see the reason we had to `auditTime()` the sear
 
 **Web Workers can make your computation output so fast that displaying the results in the DOM can become a major overall bottleneck**
 
-### Worker Thread Test
+
+Visual comparisons are all well and good, but let's properly look into how the performance differs between the two strategies
+
 ## Performance
+To test the relative performance I will search the phrase `"There is nothing more deceptive than an obvious fact"` within the Sherlock Holmes book. I'll do it three times using the regular main thread strategy, clearing the input each time, then the same for the web worker strategy.
+
+![Strategy Performance](playground/performance-test.png)
+
+From these graphs it is clear the difference using a web worker makes - the main thread (in yellow in this graph) holds at 100% for a full 15 seconds, during which repainting will suffer greatly. With the web worker strategy, the main thread barely peaks at 50% utilisation, and is actually mostly idle for the duration. 
+
+It is worth noting at this time that the overall duration is roughly the same, and it would be expected that in some circumstances the worker strategy might be slightly slower overall, as the strategy requires spinning up a new thread, and structured copying of the data between threads.
+
+One other consideration is that we're not fully utilising the power of web workers - the computation job that we're running can easily be broken up into smaller tasks for _multiple_ workers, and processed using a thread pool strategy. This is a topic for another article, and I might just be covering that one next.
+
 ## Wrap Up
+You've reached the end! This was a bit of a marathon I'm afraid but there was an awful lot of content to cover. In summary, we outlined a real world scenario where users want to robustly do full text search over a novel, we then came up with a data flow strategy, then an algorithm, then built it out into an application, then refactored to use an observable web worker strategy, and finally did some performance metrics to prove the utility of web workers.
+
+The code is [all available on Github](https://github.com/zakhenry/blog-posts/tree/master/posts/observable-workers-deep-dive) so please feel free to clone it and have a play. If you spot any errors or room for improvement please do raise an issue or a pull request, I'm learning too!
