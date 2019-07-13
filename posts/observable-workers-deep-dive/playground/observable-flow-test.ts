@@ -18,7 +18,7 @@ enum BookChoice {
 
 /**
  * This is a nice little custom operator that spaces out observables by a certain amount, this is super handy for
- * emulating user events (people are slooow!)
+ * emulating user events (humans are slooow!)
  */
 function separateEmissions<T>(delayTime: number) {
   return (obs$: Observable<T>): Observable<T> => {
@@ -31,7 +31,7 @@ function separateEmissions<T>(delayTime: number) {
 /**
  * For the book selection, we've piped to separateEmissions() with 4000ms
  * defined, this means when subscribed the observable will immediately emit
- * Alice in Wonderland, then 4 seconds later emit Sherlock Holmes.
+ * Alice in Wonderland content, then 4 seconds later emit Sherlock Holmes content.
  */
 const userBookSelection$ = from([
   BookChoice.ALICE_IN_WONDERLAND,
@@ -40,7 +40,8 @@ const userBookSelection$ = from([
 
 /**
  * Slightly different strategy for this one - we're
- * 1. Piping delayed user book selection to vary the search phrase
+ * 1. Piping delayed user book selection to vary the search phrase depending on
+ * which book is selected
  * 2. creating a streams of individual characters
  * 3. spacing out the emissions by 100ms (this is the inter-keystroke time)
  * 4. using scan to combine the previous characters
@@ -84,7 +85,7 @@ function getSearchResults(
   searchTerm: string,
   bookText: string,
 ): Observable<string> {
-  return from([' (first result)', ' (second result)']).pipe(
+  return from([' (first search result)', ' (second search result)']).pipe(
     map(result => `${bookText} : ${searchTerm} : ${result}`),
     delay(20 * searchTerm.length),
     separateEmissions(200),
@@ -92,7 +93,7 @@ function getSearchResults(
 }
 
 /**
- * This is unchanged
+ * This is unchanged from before
  */
 const searchResults$ = userBookSelection$.pipe(
   switchMap(selection => getBookText(selection)),

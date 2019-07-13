@@ -1,14 +1,16 @@
 ---
-title: 'Observable Web Workers in depth'
-published: false
-description: 'Deep dive into Observable Web Workers building an example application which utilises the power of Web Workers with the fluent message passing patterns observables give.'
+title: 'Observable Web Workers, a deep dive into a realistic use case'
+cover_image: https://thepracticaldev.s3.amazonaws.com/i/vgtwwbmw3tviqi9n2t7y.jpg
+published: true
+description: 'Take a plunge into the depths of Observable Web Workers, building an example application which utilises the power of Web Workers with the fluent message passing patterns observables give.'
 tags: web worker, observable, rxjs, angular
 series: observable-webworkers
+id: b9efc71a-8afa-4d53-b2c9-09e48528a33b
 ---
 
-In the [Previous article](https://dev.to/zakhenry/observable-webworkers-with-angular-8-4k6) we took a look at the library [`observable-webworker`](https://www.npmjs.com/package/observable-webworker) which lets us use familiar observable patterns to construct and manage Web Workers and the communication between the threads. In this article we will develop an application, first without a web worker, then refactor it to use a web worker to demonstrate the power and usefulness of web workers. If you haven't read the previous article, I do recommend you do so first as it goes over all the prerequisites to getting up and running, and the background of what web workers are, which I will skip over here.
+In the [previous article](https://dev.to/zakhenry/observable-webworkers-with-angular-8-4k6) we took a look at the library [`observable-webworker`](https://github.com/cloudnc/observable-webworker) which lets us use familiar observable patterns to construct and manage Web Workers and the communication between the threads. In this article we will develop an application, first without a web worker, then refactor it to use a web worker to demonstrate the power and usefulness of web workers. If you haven't read the previous article, I do recommend you do so first as it goes over all the prerequisites to getting up and running, and the background of what web workers are, which I will skip over here.
 
-This article is a deep dive, so get yourself a beverage and settle in. Here's a table of contents so you can come back to this article in stints
+This article is a deep dive for advanced developers, so get yourself a beverage and settle in. I'm assuming moderate to advanced knowledge of Typescript and RxJS in this article, so if you're a beginner this may not be for you I'm afraid. Here's a table of contents so you can come back to this article in stints if you like.
 
 - [Brief](#brief)
 - [Data Flow Plan](#data-flow-plan)
@@ -60,13 +62,12 @@ Additional to these user journey requirements, we will have the following perfor
 - the user interface must remain responsive at all times
 - the user gets their search results live with every keystroke
 - the user can change book and the search immediate begins returning results for their previous search
-- the above requirements apply to an underpowered machine such as a mobile device
 
 The difficult part to take particular note of in the requirements is the ability to handle typos and misspellings. This explodes the problem complexity as it is not as simple as finding a substring of a paragraph; rather we need to score candidate substrings to find the best match.
 
 ## Data Flow Plan
 
-To start with we will write down a scratch file of the observable flow, then later build it out into the application.
+To start with we will put together a simple typescript file proving out the observable flow, then later build it into the application.
 
 ```ts
 // playground/observable-flow.ts
@@ -167,7 +168,7 @@ searchResults$.subscribe(console.log);
 
 ```
 
-Alrighty, we've got a concept of what we're trying to build, so what do we get when we run it? I like to use `ts-node` for these kind of quick tests, so just run `npx ts-node playground/observable-flow.ts` (tip: the `--skip-project` bit is just because I'm currently in a working directory that has a tsconfig.json file that is not compatible with just running a plain nodejs script.)
+Alrighty, we've got a concept of what we're trying to build, so what do we get when we run it? I like to use `ts-node` for these kind of quick tests, so just run `npx ts-node --skip-project playground/observable-flow.ts` (tip: the `--skip-project` bit is just because I'm currently in a working directory that has a tsconfig.json file that is not compatible with just running a plain nodejs script.)
 
 Our output of the above file is as follows:
 
@@ -209,7 +210,7 @@ enum BookChoice {
 
 /**
  * This is a nice little custom operator that spaces out observables by a certain amount, this is super handy for
- * emulating user events (people are slooow!)
+ * emulating user events (humans are slooow!)
  */
 function separateEmissions<T>(delayTime: number) {
   return (obs$: Observable<T>): Observable<T> => {
@@ -222,7 +223,7 @@ function separateEmissions<T>(delayTime: number) {
 /**
  * For the book selection, we've piped to separateEmissions() with 4000ms
  * defined, this means when subscribed the observable will immediately emit
- * Alice in Wonderland, then 4 seconds later emit Sherlock Holmes.
+ * Alice in Wonderland content, then 4 seconds later emit Sherlock Holmes content.
  */
 const userBookSelection$ = from([
   BookChoice.ALICE_IN_WONDERLAND,
@@ -231,7 +232,8 @@ const userBookSelection$ = from([
 
 /**
  * Slightly different strategy for this one - we're
- * 1. Piping delayed user book selection to vary the search phrase
+ * 1. Piping delayed user book selection to vary the search phrase depending on
+ * which book is selected
  * 2. creating a streams of individual characters
  * 3. spacing out the emissions by 100ms (this is the inter-keystroke time)
  * 4. using scan to combine the previous characters
@@ -275,7 +277,7 @@ function getSearchResults(
   searchTerm: string,
   bookText: string,
 ): Observable<string> {
-  return from([' (first result)', ' (second result)']).pipe(
+  return from([' (first search result)', ' (second search result)']).pipe(
     map(result => `${bookText} : ${searchTerm} : ${result}`),
     delay(20 * searchTerm.length),
     separateEmissions(200),
@@ -283,7 +285,7 @@ function getSearchResults(
 }
 
 /**
- * This is unchanged
+ * This is unchanged from before
  */
 const searchResults$ = userBookSelection$.pipe(
   switchMap(selection => getBookText(selection)),
@@ -331,21 +333,21 @@ searchResults$
 
 ```txt
 getBookText called (http://alice.text)
-0 : Search Result: [http://alice.text : w :  (first result)] (+0.431 seconds)
-1 : Search Result: [http://alice.text : we :  (first result)] (+0.123 seconds)
-2 : Search Result: [http://alice.text : we’ :  (first result)] (+0.128 seconds)
-3 : Search Result: [http://alice.text : we’r :  (first result)] (+0.121 seconds)
-4 : Search Result: [http://alice.text : we’re :  (first result)] (+0.121 seconds)
-5 : Search Result: [http://alice.text : we’re all mad here :  (first result)] (+1.6 seconds)
-6 : Search Result: [http://alice.text : we’re all mad here :  (first result), http://alice.text : we’re all mad here :  (second result)] (+0.204 seconds)
+0 : Search Result: [http://alice.text : w :  (first search result)] (+0.431 seconds)
+1 : Search Result: [http://alice.text : we :  (first search result)] (+0.123 seconds)
+2 : Search Result: [http://alice.text : we’ :  (first search result)] (+0.128 seconds)
+3 : Search Result: [http://alice.text : we’r :  (first search result)] (+0.121 seconds)
+4 : Search Result: [http://alice.text : we’re :  (first search result)] (+0.121 seconds)
+5 : Search Result: [http://alice.text : we’re all mad here :  (first search result)] (+1.6 seconds)
+6 : Search Result: [http://alice.text : we’re all mad here :  (first search result), http://alice.text : we’re all mad here :  (second search result)] (+0.204 seconds)
 getBookText called (http://sherlock.text)
-7 : Search Result: [http://sherlock.text : n :  (first result)] (+1.704 seconds)
-8 : Search Result: [http://sherlock.text : no :  (first result)] (+0.125 seconds)
-9 : Search Result: [http://sherlock.text : not :  (first result)] (+0.124 seconds)
-10 : Search Result: [http://sherlock.text : noth :  (first result)] (+0.125 seconds)
-11 : Search Result: [http://sherlock.text : nothi :  (first result)] (+0.122 seconds)
-12 : Search Result: [http://sherlock.text : nothing more deceptive than an obvious fact :  (first result)] (+4.68 seconds)
-13 : Search Result: [http://sherlock.text : nothing more deceptive than an obvious fact :  (first result), http://sherlock.text : nothing more deceptive than an obvious fact :  (second result)] (+0.201 seconds)
+7 : Search Result: [http://sherlock.text : n :  (first search result)] (+1.704 seconds)
+8 : Search Result: [http://sherlock.text : no :  (first search result)] (+0.125 seconds)
+9 : Search Result: [http://sherlock.text : not :  (first search result)] (+0.124 seconds)
+10 : Search Result: [http://sherlock.text : noth :  (first search result)] (+0.125 seconds)
+11 : Search Result: [http://sherlock.text : nothi :  (first search result)] (+0.122 seconds)
+12 : Search Result: [http://sherlock.text : nothing more deceptive than an obvious fact :  (first search result)] (+4.68 seconds)
+13 : Search Result: [http://sherlock.text : nothing more deceptive than an obvious fact :  (first search result), http://sherlock.text : nothing more deceptive than an obvious fact :  (second search result)] (+0.201 seconds)
 
 ```
 
@@ -355,11 +357,11 @@ We can see straight away that we fetch the Alice in Wonderland book immediately,
 
 Next as the phrase begins to be typed we first get one result, then the other is appended to the results, good good.
 
-Later on (the line starting with `5`) we can see that the search result slowdown has meant that we're getting results less frequently and they are for longer search phrases than just the next character - this is what we expect as it means that the switchMap is unsubscribing from the search processor function as there is different data to be processed. This is a great opportunity to compare the different behaviors of `switchMap()`, `mergeMap()` and `exhaustMap()`.
+Later on (the line starting with `5`) we can see that the search result slowdown has meant that we're getting results less frequently and they are for longer search phrases than just the next character - this is what we expect as it means that the `switchMap` is unsubscribing from the search processor function as there is different data to be processed. This is a great opportunity to compare the different behaviors of `switchMap()`, `mergeMap()` and `exhaustMap()`:
 
-If we had chosen `mergeMap()`, we would see every single search result for every keystroke, but likely all overlapping with each other and would be pretty confusing. Also the overall time would be longer, assuming the CPU was saturated while processing the search.
+- If we had chosen `mergeMap()`, we would see every single search result for every keystroke, but likely all overlapping with each other and would be pretty confusing. Also the overall time would be longer, assuming the CPU was saturated while processing the search.
 
-If we had chosen `exhaustMap()`, we would get the exhaustive set of results (hence the name!) in the correct order, however the overall time would be _way_ longer as we had to wait sequentially.
+- If we had chosen `exhaustMap()`, we would get the exhaustive set of results (hence the name!) in the correct order, however the overall time would be _way_ longer as we had to wait sequentially.
 
 In this case I think `switchMap()` is the correct behavior as the user is not interested in interim search results before they have finished typing, and we gain efficiency by immediately cancelling computation of irrelevant search results.
 
@@ -371,7 +373,7 @@ Okay, we're in a state now where we're pretty confident in the general data flow
 
 Given the requirement that our search terms may contain typos and misspellings, the algorithm to find the best paragraph to show the user is non trivial. There are a number of different fuzzy string matching algorithms, each with their own strengths & weaknesses. Given our requirement is about typos and misspellings, not word order mistakes, computing the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) sounds like a great candidate.
 
-Levenshtein distance is the number of changes required to change on string to another. The changes can be either insertions, deletions or substitutions. The distance is simply the minimum count of changes.
+Levenshtein distance is the number of changes required to change one string to another. The changes can be either insertions, deletions or substitutions. The distance is simply the minimum count of changes.
 
 As an example the distance between `hello` and `helo` is `1` because there is one insertion required. Two identical strings will have a distance of `0`.
 
@@ -379,9 +381,9 @@ Now our inputs don't quite suit this algorithm as we're comparing a small search
 
 Finally, we will normalize Levenshtein distance against the length of the search string in order to compute a similarity score. This will be used to rank the paragraphs by best match.
 
-In order to not make this article any longer than in already is, I'm going to skip over the implementation, but you can dig in to it yourself at https://github.com/zakhenry/blog-posts/tree/master/posts/observable-workers-deep-dive/src/app/book-search/common/fuzzy-substring.ts
+In order to not make this article any longer than it already is, I'm going to skip over the implementation, but you can dig in to it yourself at https://github.com/zakhenry/blog-posts/tree/master/posts/observable-workers-deep-dive/src/app/book-search/common/fuzzy-substring.ts
 
-What is important to know is that there is a function
+What is important to know is that there is a function `fuzzySubstringSimilarity`:
 
 ```ts
 // src/app/book-search/common/fuzzy-substring.ts#L70-L73
@@ -408,7 +410,7 @@ export interface FuzzyMatchSimilarity extends FuzzyMatch {
 }
 ```
 
-We will be using this return type to both score the book's paragraphs and return the start and end index of the match so we can highlight it in the output.
+We will be using this return type to both score the paragraphs of the novel and return the start and end index of the match so we can highlight it in the output.
 
 Let's test the algorithm against the user story defined above:
 
@@ -438,13 +440,13 @@ Similarity:  {
 
 As expected, we see a substringDistance of `2` (to get to the expected substring we need to add a `'` and remove a `d`, two changes, distance is `2`). We can also see that the `similarityScore` is very high (range is 0-1) so we can expect this search to score highly on this paragraph against other paragraphs.
 
-Okedokey, we now have a algorithm sorted, and a data flow to manage it. Let's build an app! 
+Okay, we now have a algorithm sorted, and a data flow to manage it. Let's build an app! 
 
 ## Application
 
-So far we've just been working with single typescript files, to work though our ideas, but now we're going to jump into using a framework as this is much more realistic to our real world problems we hope to solve by understanding this article.
+So far we've just been working with single typescript files, to work through our ideas, but now we're going to jump into using a framework as this is much more realistic to our real world problems we hope to solve by understanding this article.
 
-I'm going to use Angular, but if you prefer any of the other awesome frameworks don't fret as this is going to be fairly framework agnostic anyway. If you've made it this far, it's probably safe to assume you have the basics down pat so I'll gloss over that.
+I'm going to use Angular, but if you prefer any of the other awesome frameworks don't fret as this is going to be fairly framework agnostic anyway. If you've made it this far, it's probably safe to assume you have the basics of framework development down pat so I'll gloss over that.
 
 ```
 ng new observable-workers-deep-dive
@@ -454,7 +456,7 @@ ng new observable-workers-deep-dive
 ng generate component book-search
 ```
 
-Ok, we've got a basic framework scaffolded, given we're trying to test the different between using observables directly, and using observables with webworkers, as we build out the application we will try to extract the common functionality into one place; that way as many variables as possible are controlled during our performance tests.
+Ok, we've got a basic framework scaffolded, given we're trying to test the difference between using observables directly, and using observables with web workers, as we build out the application we will try to extract the common functionality into one place. That way as many variables as possible are controlled during our performance tests as the worker and main thread strategies will be using the exact same core algorithm code.
 
 ### Common functionality
 
@@ -485,7 +487,7 @@ function getSearchResults(
 
 Some very important things to note here. We're converting the array of paragraphs to an observable stream of individual paragraphs with `from()`. 
 
-After this we use `observeOn(asyncScheduler)` - this is _critical_ to the responsiveness of the application. Basically what this is doing is rescheduling the emissions of the `from()` observable from being synchronous to asynchronous. This allows subscribers to our stream to disconnect from the stream **without having to compute the fuzzy substring scores for the entire book**. This will allow us to discard partial search results when the search string becomes invalid due to the user typing more characters.
+After this we use `observeOn(asyncScheduler)` - this is _critical_ to the responsiveness of the application. Basically what this is doing is rescheduling the emissions of the `from()` observable from being synchronous to asynchronous. This allows subscribers to our stream to disconnect from the paragraph stream **without having to compute the fuzzy substring scores for the entire book**. This will allow us to discard partial search results when the search string becomes invalid due to the user typing more characters.
 
 Finally we `map()` to the computation function, and attach the paragraph index number to the output - we will later use this to work out how far along the computation is as a percentage.
 
@@ -615,13 +617,13 @@ export class BookSearchService {
   }
 }
 ```
-With this service, we inject an `HttpClient` into the contructor; this allows us to fetch the book content. Next is a public method that we will use in our component. It takes two streams:
+With this service, we inject an `HttpClient` into the constructor; this allows us to fetch the book content. Next is a public method that we will use in our component. It takes two streams:
 - the first is the `BookChoice`. Recall from earlier this is a string enum with the values being the URl of the book
-- the second is the search phrase itself
+- the second is the search phrase itself that is used for fuzzy matching against the paragraphs of the book
 
-We call out to a local `protected processSearch` method which simply takes the url and pipes it to a `switchMap()` that fetches the content, then in turn pipes to the search term observable and finally we switch on that observable to call out to `getAccumulatedSearchResults` that we built earlier.
+We call out to a local `processSearch` method which simply takes the url and pipes it to a `switchMap()` that fetches the content, then in turn pipes to the search term observable and finally we switch on that observable to call out to `getAccumulatedSearchResults` that we built earlier.
 
-Back in the `search()` method, we pipe the results from `processSearch()` and first `auditTime()`. This restricts the data output rate to 60 frames per second otherwise we could potentially get tens of thousands of `SearchResults` per second, which would completely oversaturate the change detection strategy of the framework when we try to display the results in the DOM.
+Back in the `search()` method, we pipe the results from `processSearch()` and first use the `auditTime()` operator. This restricts the data output rate to 60 frames per second otherwise we could potentially get tens of thousands of `SearchResults` per second, which would completely oversaturate the change detection strategy of the framework when we try to display the results in the DOM.
 
 Lastly we add a `share()` to the search results as we don't want multiple subscribers to trigger computation of the search results more than once.
 
@@ -686,7 +688,7 @@ export class BookSearchComponent {
 Points of interest in this component:
 - we construct a new `FormControl` for the book selection, then immediately set up an observable that observes the `valueChanges` of that control
 - we do the same thing for the search terms
-- next we construct the `private searchResults$: Observable<SearchResults>` using these two observables, it calls out to the service that we just defined earlier
+- next we construct the `private searchResults$: Observable<SearchResults>` using the previous two observables, it calls out to the service that we just defined earlier
 - the last two public members observe the `searchResults$`, the first extracting the matching paragraphs, the second extracting the search progress information
 
 Next let's take a look how this will be displayed in the template:
@@ -728,10 +730,12 @@ Nice simple template, we've got
 - then a `<span>` that outputs the search result progress
 - lastly a repeated `<blockquote>` to output the results of the search
 
+Note that we're using `AsyncPipe` to managed _all_ subscriptions - this greatly simplifies the component logic, and allows us to use `OnPush` change detection strategy as the `AsyncPipe` manages marking the component to be checked.
+
 At long last, we're there, let us test it.
 
 ### Main Thread Test
-Ok so when we run the app, we're presented with the two controls. So let's select Alice and Wonderland and type that typo-ridden string `"were all madd her"`
+Ok so when we run the app, we're presented with the two controls. So let's select "Alice and Wonderland" and type that typo-ridden string `"were all madd her"`
 
 ![Main thread Demo](https://media.giphy.com/media/WQrOW2zcL4mxlF6odx/giphy.gif)
 
@@ -766,7 +770,7 @@ addEventListener('message', ({ data }) => {
 
 ```
 
-We don't want any of that, so we will delete it and implement our own worker version of the `processSearch` method we created in the service earlier:
+We don't want any of that boilerplate, so we will delete it and implement our own worker version of the `processSearch` method we created in the service earlier:
 
 ```ts
 // src/app/book-search/worker-thread/book-search.worker.ts
@@ -815,11 +819,11 @@ export class BookSearchWorker implements DoWork<WorkerInput, SearchResults> {
 }
 
 ```
-This ought to look pretty familiar, as it is really just the `processSearch` function within a `@ObservableWorker()` class from the [`observable-webworker`](https://github.com/cloudnc/observable-webworker) package. The only difference is that the input to the `work()` method is a single stream of `Observable<WorkerInput>` which we split and observe separately.
+This ought to look pretty familiar, as it is really just the `processSearch` function within a `@ObservableWorker()`- decorated class from the [`observable-webworker`](https://github.com/cloudnc/observable-webworker) package. The only difference is that the input to the `work()` method is a single stream of `Observable<WorkerInput>` which we split and observe separately.
 
 From there it is essentially identical, though we do use the rxjs `ajax()` method rather than `HttpClient` as the `Injector` is not available in the worker context.
 
-Now for the main thread complementary class for this worker:
+Now for the main thread class to manage this worker:
 
 ```ts
 // src/app/book-search/worker-thread/book-search-worker.service.ts
@@ -885,7 +889,7 @@ export class BookSearchWorkerComponent extends BookSearchComponent {
 
 Not much going on here! All we're doing is extending the `BookSearchComponent`, reusing it's template and styles, and providing our new `BookSearchWorkerService` instead of the default `BookSearchService`.
 
-Now in our `app.component.html` template we can insert this new service:
+Now in our `app.component.html` template we can insert this new component:
 
 ```html
 <!-- src/app/app.component.html -->
@@ -914,15 +918,22 @@ Visual comparisons are all well and good, but let's properly look into how the p
 ## Performance
 To test the relative performance I will search the phrase `"There is nothing more deceptive than an obvious fact"` within the Sherlock Holmes book. I'll do it three times using the regular main thread strategy, clearing the input each time, then the same for the web worker strategy.
 
-![Strategy Performance](playground/performance-test.png)
+<!--![Strategy Performance](playground/performance-test.png)-->
+![Strategy Performance](https://thepracticaldev.s3.amazonaws.com/i/rso3qkd37i1bvqtvd4ct.png)
 
 From these graphs it is clear the difference using a web worker makes - the main thread (in yellow in this graph) holds at 100% for a full 15 seconds, during which repainting will suffer greatly. With the web worker strategy, the main thread barely peaks at 50% utilisation, and is actually mostly idle for the duration. 
 
-It is worth noting at this time that the overall duration is roughly the same, and it would be expected that in some circumstances the worker strategy might be slightly slower overall, as the strategy requires spinning up a new thread, and structured copying of the data between threads.
+It is worth noting at this time that the overall duration is roughly the same, and it would be expected that in some circumstances the worker strategy might be slightly slower overall. This is because the strategy requires spinning up a new thread, and structured copying of the data flowing between threads is not zero-cost.
 
 One other consideration is that we're not fully utilising the power of web workers - the computation job that we're running can easily be broken up into smaller tasks for _multiple_ workers, and processed using a thread pool strategy. This is a topic for another article, and I might just be covering that one next.
 
 ## Wrap Up
-You've reached the end! This was a bit of a marathon I'm afraid but there was an awful lot of content to cover. In summary, we outlined a real world scenario where users want to robustly do full text search over a novel, we then came up with a data flow strategy, then an algorithm, then built it out into an application, then refactored to use an observable web worker strategy, and finally did some performance metrics to prove the utility of web workers.
+You've reached the end! This was a bit of a marathon I'm afraid but there was an awful lot of content to cover. In summary, we outlined a real world scenario where users want to robustly do full text search over a novel, we then came up with a data flow strategy, then an algorithm, then built it out into an application, then refactored to use an observable web worker strategy, and finally did some performance metrics to prove the utility of web workers. Phew!
 
 The code is [all available on Github](https://github.com/zakhenry/blog-posts/tree/master/posts/observable-workers-deep-dive) so please feel free to clone it and have a play. If you spot any errors or room for improvement please do raise an issue or a pull request, I'm learning too!
+
+Next in this series, I will be either demonstrating how to further improve the performance of this application using thread pools, or implementing a new real world use case that does intensive image manipulation which will demonstrate high performance techniques of passing large data between threads. Let me know if you have a preference!
+
+Thanks again for staying with me here, I hope that this article has been useful to you.  
+
+[<sub>Photo by Annie Spratt on Unsplash</sub>](https://unsplash.com/@anniespratt?utm_medium=referral&amp;utm_campaign=photographer-credit&amp;utm_content=creditBadge)
