@@ -8,6 +8,7 @@ import { MatchingParagraph, SearchResults } from '../common/book-search.utils';
 export enum BookChoice {
   ALICE_IN_WONDERLAND = 'https://raw.githubusercontent.com/zakhenry/blog-posts/master/posts/observable-workers-deep-dive/src/assets/alice.txt',
   SHERLOCK_HOLMES = 'https://raw.githubusercontent.com/zakhenry/blog-posts/master/posts/observable-workers-deep-dive/src/assets/sherlock.txt',
+  WAR_AND_PEACE = 'https://raw.githubusercontent.com/zakhenry/blog-posts/master/posts/observable-workers-deep-dive/src/assets/war-and-peace.txt',
 }
 
 @Component({
@@ -27,6 +28,10 @@ export class BookSearchComponent {
     {
       url: BookChoice.SHERLOCK_HOLMES,
       name: 'Sherlock Holmes',
+    },
+    {
+      url: BookChoice.WAR_AND_PEACE,
+      name: 'War and Peace',
     },
   ];
 

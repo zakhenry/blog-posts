@@ -5,13 +5,13 @@ import {
   fuzzySubstringSimilarity,
 } from './fuzzy-substring';
 
-interface SearchMatch {
+export interface SearchMatch {
   paragraph: string;
   paragraphNumber: number;
   searchMatch: FuzzyMatchSimilarity;
 }
 
-function getSearchResults(
+export function getSearchResults(
   searchTerm: string,
   paragraphs: string[],
 ): Observable<SearchMatch> {
@@ -37,7 +37,7 @@ export interface SearchResults {
   paragraphCount: number;
 }
 
-function accumulateResults(paragraphCount: number) {
+export function accumulateResults(paragraphCount: number) {
   return (obs$: Observable<SearchMatch>): Observable<SearchResults> => {
     return obs$.pipe(
       scan((searchResults: SearchMatch[], searchResult: SearchMatch) => {
@@ -50,7 +50,7 @@ function accumulateResults(paragraphCount: number) {
           const last = searchMatches[searchMatches.length - 1];
 
           return {
-            searchedParagraphCount: last ? last.paragraphNumber : 0,
+            searchedParagraphCount: last ? last.paragraphNumber + 1 : 0,
             paragraphCount,
             paragraphs: searchMatches
               .sort(
