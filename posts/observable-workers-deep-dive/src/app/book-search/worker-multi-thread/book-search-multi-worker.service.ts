@@ -8,7 +8,7 @@ import { SearchResults, WorkerInput } from '../common/book-search.utils';
 @Injectable({
   providedIn: 'root',
 })
-export class BookSearchWorkerPoolService extends BookSearchService {
+export class BookSearchMultiWorkerService extends BookSearchService {
   protected processSearch(
     url$: Observable<string>,
     search$: Observable<string>,
@@ -18,7 +18,7 @@ export class BookSearchWorkerPoolService extends BookSearchService {
     );
 
     return fromWorker(
-      () => new Worker('./book-search-pool.dispatcher.worker', { type: 'module' }),
+      () => new Worker('./book-search.dispatcher.worker', { type: 'module' }),
       input$,
     );
   }

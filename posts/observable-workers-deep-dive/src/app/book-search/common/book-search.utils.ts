@@ -6,20 +6,21 @@ import {
 } from './fuzzy-substring';
 
 export interface SearchMatch {
+  searchString: string;
   paragraph: string;
   paragraphNumber: number;
   searchMatch: FuzzyMatchSimilarity;
 }
 
 export function getSearchResults(
-  searchTerm: string,
+  searchString: string,
   paragraphs: string[],
 ): Observable<SearchMatch> {
   return from(paragraphs).pipe(
     observeOn(asyncScheduler),
     map((paragraph, index) => {
-      const searchMatch = fuzzySubstringSimilarity(searchTerm, paragraph);
-      return { searchMatch, paragraph, paragraphNumber: index };
+      const searchMatch = fuzzySubstringSimilarity(searchString, paragraph);
+      return { searchMatch, paragraph, paragraphNumber: index, searchString };
     }),
   );
 }
@@ -46,11 +47,11 @@ export function accumulateResults(paragraphCount: number) {
       }, []),
       startWith([]),
       map(
-        (searchMatches: SearchMatch[]): SearchResults => {
+        (searchMatches: SearchMatch[], index): SearchResults => {
           const last = searchMatches[searchMatches.length - 1];
 
           return {
-            searchedParagraphCount: last ? last.paragraphNumber + 1 : 0,
+            searchedParagraphCount: index,//last ? last.paragraphNumber + 1 : 0,
             paragraphCount,
             paragraphs: searchMatches
               .sort(

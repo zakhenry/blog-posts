@@ -1,24 +1,10 @@
 import { DoWork, fromWorker, ObservableWorker } from 'observable-webworker';
-import { combineLatest, Observable, throwError } from 'rxjs';
+import { asyncScheduler, combineLatest, Observable, Subject } from 'rxjs';
 import { ajax } from 'rxjs/ajax';
-import {
-  catchError,
-  distinctUntilChanged,
-  map,
-  shareReplay,
-  startWith,
-  switchMap,
-} from 'rxjs/operators';
-import {
-  accumulateResults,
-  getAccumulatedSearchResults,
-  SearchResults,
-  WorkerInput,
-} from '../common/book-search.utils';
-import {
-  SearchTermMessage,
-  WorkerPoolMessage,
-} from './book-search-pool.interfaces';
+import { distinctUntilChanged, map, observeOn, shareReplay, startWith, switchMap } from 'rxjs/operators';
+import { SearchResults, WorkerInput } from '../common/book-search.utils';
+import { MultiWorkerMessage, SearchTermMessage } from './book-search-multi-worker.interfaces';
+
 
 @ObservableWorker()
 export class BookSearchDispatcherWorker
@@ -45,7 +31,7 @@ export class BookSearchDispatcherWorker
 
         const workers$ = this.chunkParagraphs(paragraphs, workerCount).map(chunkedParagraphs => {
           const processorMessages$: Observable<
-            WorkerPoolMessage
+            MultiWorkerMessage
           > = searchTerm$.pipe(
             map(
               (searchTerm): SearchTermMessage => ({
@@ -56,7 +42,7 @@ export class BookSearchDispatcherWorker
             startWith({ type: 'ParagraphsMessage', payload: chunkedParagraphs }),
           );
 
-          return fromWorker<WorkerPoolMessage, SearchResults>(
+          return fromWorker<MultiWorkerMessage, SearchResults>(
             () =>
               new Worker('./book-search.processor.worker', { type: 'module' }),
             processorMessages$,

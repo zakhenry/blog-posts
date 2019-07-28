@@ -2,12 +2,12 @@ import { DoWork, ObservableWorker } from 'observable-webworker';
 import { combineLatest, Observable } from 'rxjs';
 import { distinctUntilChanged, filter, map, switchMap, tap } from 'rxjs/operators';
 import { accumulateResults, getSearchResults, SearchResults } from '../common/book-search.utils';
-import { ParagraphsMessage, SearchTermMessage, WorkerPoolMessage } from './book-search-pool.interfaces';
+import { MultiWorkerMessage, ParagraphsMessage, SearchTermMessage } from './book-search-multi-worker.interfaces';
 
 @ObservableWorker()
 export class BookSearchProcessorWorker
-  implements DoWork<WorkerPoolMessage, SearchResults> {
-  public work(input$: Observable<WorkerPoolMessage>): Observable<SearchResults> {
+  implements DoWork<MultiWorkerMessage, SearchResults> {
+  public work(input$: Observable<MultiWorkerMessage>): Observable<SearchResults> {
 
     const searchTerm$ = input$.pipe(
       filter(message => message.type === 'SearchTermMessage'),
