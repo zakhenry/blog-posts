@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "My blog posts",
   "main": "index.js",
-  "repository": "git@github.com:zakhenry/blog-posts.git",
+  "repository": {
+    "type": "git",
+    "urdl": "https://github.com/zakhenry/blog-posts.git"
+  },
   "author": "Zak Henry <zak.henry@gmail.com>",
   "license": "MIT",
   "private": true,
@@ -11,8 +14,7 @@
     "embedme": "embedme posts/**/*.md"
   },
   "devDependencies": {
-    "@angular/bazel": "^8.0.2",
-    "embedme": "1.6.0",
+    "embedme": "1.17.1",
     "prettier": "^1.18.2",
     "ts-node": "^8.3.0"
   }
