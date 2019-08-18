@@ -1,8 +1,9 @@
 ---
 title: "Observable Web Workers with Angular (8) - Introduction"
 published: true
+cover_image: https://thepracticaldev.s3.amazonaws.com/i/59lw8ftqf8y4d78yfdxi.jpg
 description: "Introduction to `observable-webworker`, a library to help make super clean streaming web worker implementations"
-tags: web worker, observable, rxjs, angular, typescript, streaming
+tags: angular, webworker, observables, rxjs
 series: observable-webworkers
 ---
 

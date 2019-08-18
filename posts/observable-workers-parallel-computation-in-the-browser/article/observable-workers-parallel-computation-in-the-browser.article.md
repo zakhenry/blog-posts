@@ -1,7 +1,7 @@
 ---
-title: Parallel Computation in the Browser with Observable Webworkers
-cover_image: ./max-vertsanov-qvRuue12Huw-unsplash.jpg
-published: false
+title: Parallel computation in the browser with observable webworkers
+cover_image: https://raw.githubusercontent.com/zakhenry/blog-posts/master/posts/observable-workers-parallel-computation-in-the-browser/article/max-vertsanov-qvRuue12Huw-unsplash.jpg
+published: true
 description: Improve upon the performance of a single webworker with multiple parallel webworkers.
 tags: web worker, observable, rxjs, angular
 series: observable-webworkers
@@ -24,7 +24,7 @@ Put simply, with the worker pool strategy, we spin up as many workers as we are 
 
 ---
 
-To better explain this concept and how to implement it, we will build a simple little application that will take a list of files (using an `<input type="file" multiple />` element) and return the MD5 hash sum of those files to the main thread. This basic concept can be expanded to many different types of application, and is in itself a fairly useful application as you might want to use this strategy for hashing multiple files for upload to AWS S3 for instance.
+To better explain this concept and how to implement it, we will build a simple application that will take a list of files (using an `<input type="file" multiple />` element) and return the MD5 hash sum of those files to the main thread. This basic concept can be expanded to many different types of application, and is in itself a fairly useful application as you might want to use this strategy for hashing multiple files for upload to AWS S3 for instance.
 
 Let's start off by outlining exactly what we're trying to achieve. I'll use a little diagram syntax that is loosely based on the [RxJS marble testing](https://github.com/ReactiveX/rxjs/blob/master/docs_app/content/guide/testing/marble-testing.md) syntax.
 
@@ -211,7 +211,7 @@ export class WorkerPoolHashWorker implements DoWorkUnit<File, FileHashPayload> {
 
 In the class header we decorate it with `@ObservableWorker()` to register the class as a worker so that we can communicate with it from the main thread.
 
-We also implement `DoWorkUnit<File, FileHashPayload>` which means that we need to implement a public method that takes a file and return an observable of `FileHashPayload`.
+We also implement `DoWorkUnit<File, FileHashPayload>` which means that we need to implement a public method that takes a file and returns an observable of `FileHashPayload`.
 
 <!-- embedme ../src/app/files-hash/file-hasher.worker.ts#L9-L13 -->
 
@@ -223,7 +223,7 @@ public workUnit(file: File): Observable<FileHashPayload> {
 }
 ```
 
-This method is pretty straight forward - we read the file as an array buffer (see the private method defined next for the implementation), then map the resulting array buffer to the `FileHashPayload` we defined earlier with the hash computed synchronously using the `js-md5` library.
+This method is pretty straightforward - we read the file as an array buffer (see the private method defined next for the implementation), then map the resulting array buffer to the `FileHashPayload` we defined earlier with the hash computed synchronously using the `js-md5` library.
 
 Note that we're returning a completing observable here. This is critical to the functioning of the `observable-webworker` library when managing thread pools. It uses the completion notification to determine that the worker has completed that unit of work and is ready for another unit of work. We return observable as it allows us to return multiple events from the worker, which is useful for outputting progress events from long running processes.
 
@@ -257,7 +257,7 @@ export class FilesHashComponent {
 
 This is quite similar to what we were doing in earlier articles with `fromWorker()` but this time we use `fromWorkerPool()` from `observable-webworker`. Like `fromWorker` the arguments are a factory to create a worker, and the input itself.
 
-In this example we've used an `Array<File>` as input, however the `fromWorkerPool` method also takes an observable or an iterator.
+In this example we've used an `Array<File>` as input, however the `fromWorkerPool` method also takes an `Observable<T>` or an `Iterator<T>`.
 
 Iterators can be very useful with this pattern as you can use their lazy evaluation feature to know _when_ the work has been picked up for processing, not just that it has been queued.
 
@@ -265,7 +265,7 @@ Observable can be useful as you're probably using observable streams anyway, and
 
 ---
 
-If we now run our application defined above, we will see on selection of a group of files something like the following:
+If we now run our application defined above, and select some filesm, we will see something like the following:
 
 ```
 files (10) [File, File, File, File, File, File, File, File, File, File]
@@ -287,7 +287,7 @@ From the output we can see that we've achieved the expected outcome that we theo
 
 Don't just take my word for it though - I've created a far more interactive demo at [https://cloudnc.github.io/observable-webworker](https://cloudnc.github.io/observable-webworker) which uses basically the exact same strategy outlined here, just with a bunch more progress messages to build a pretty timeline:
 
-![Webworker Pool Demo](./webworker-pool-demo.gif)
+![Webworker Pool Demo](https://github.com/zakhenry/blog-posts/raw/master/posts/observable-workers-parallel-computation-in-the-browser/article/webworker-pool-demo.gif)
 
 To try it out, jump to the "Multiple Worker Pool" section and select some files. Don't worry - no files are sent out of the browser, feel free to check the source to verify or generate some random files like I did. Once you've selected the files, you'll see a timeline graph of the files being processed with whatever concurrency your machine can handle.
 
