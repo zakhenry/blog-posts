@@ -465,24 +465,24 @@ To start with we will build a utility function to handle getting a stream of fuz
 ```ts
 // src/app/book-search/common/book-search.utils.ts#L8-L25
 
-interface SearchMatch {
+export interface SearchMatch {
+  searchString: string;
   paragraph: string;
   paragraphNumber: number;
   searchMatch: FuzzyMatchSimilarity;
 }
 
-function getSearchResults(
-  searchTerm: string,
+export function getSearchResults(
+  searchString: string,
   paragraphs: string[],
 ): Observable<SearchMatch> {
   return from(paragraphs).pipe(
     observeOn(asyncScheduler),
     map((paragraph, index) => {
-      const searchMatch = fuzzySubstringSimilarity(searchTerm, paragraph);
-      return { searchMatch, paragraph, paragraphNumber: index };
+      const searchMatch = fuzzySubstringSimilarity(searchString, paragraph);
+      return { searchMatch, paragraph, paragraphNumber: index, searchString };
     }),
   );
-}
 ```
 
 Some very important things to note here. We're converting the array of paragraphs to an observable stream of individual paragraphs with `from()`. 
@@ -502,6 +502,7 @@ Next up for our common functions is an accumulation function that will
 ```ts
 // src/app/book-search/common/book-search.utils.ts#L27-L77
 
+
 export interface MatchingParagraph {
   before: string;
   match: string;
@@ -515,7 +516,7 @@ export interface SearchResults {
   paragraphCount: number;
 }
 
-function accumulateResults(paragraphCount: number) {
+export function accumulateResults(paragraphCount: number) {
   return (obs$: Observable<SearchMatch>): Observable<SearchResults> => {
     return obs$.pipe(
       scan((searchResults: SearchMatch[], searchResult: SearchMatch) => {
@@ -524,11 +525,11 @@ function accumulateResults(paragraphCount: number) {
       }, []),
       startWith([]),
       map(
-        (searchMatches: SearchMatch[]): SearchResults => {
+        (searchMatches: SearchMatch[], index): SearchResults => {
           const last = searchMatches[searchMatches.length - 1];
 
           return {
-            searchedParagraphCount: last ? last.paragraphNumber : 0,
+            searchedParagraphCount: index,//last ? last.paragraphNumber + 1 : 0,
             paragraphCount,
             paragraphs: searchMatches
               .sort(
@@ -552,7 +553,6 @@ function accumulateResults(paragraphCount: number) {
       ),
     );
   };
-}
 ```
 
 Despite the line count, there is nothing particularly complex in here, some points to note however:
@@ -565,6 +565,7 @@ Lastly we combine these two functions into a single one that accepts a search te
 ```ts
 // src/app/book-search/common/book-search.utils.ts#L79-L87
 
+
 export function getAccumulatedSearchResults(
   searchTerm: string,
   bookText: string,
@@ -573,7 +574,6 @@ export function getAccumulatedSearchResults(
   return getSearchResults(searchTerm, paragraphs).pipe(
     accumulateResults(paragraphs.length),
   );
-}
 ```
 
 ### Service
@@ -636,6 +636,7 @@ Our component requirements are super simple - it needs to provide a form control
 ```ts
 // src/app/book-search/main-thread/book-search.component.ts#L13-L59
 
+
 @Component({
   selector: 'app-book-search',
   templateUrl: './book-search.component.html',
@@ -653,6 +654,10 @@ export class BookSearchComponent {
     {
       url: BookChoice.SHERLOCK_HOLMES,
       name: 'Sherlock Holmes',
+    },
+    {
+      url: BookChoice.WAR_AND_PEACE,
+      name: 'War and Peace',
     },
   ];
 
@@ -678,11 +683,6 @@ export class BookSearchComponent {
   public searchResultProgress$: Observable<
     [number, number]
   > = this.searchResults$.pipe(
-    map(result => [result.searchedParagraphCount, result.paragraphCount]),
-  );
-
-  constructor(private bookSearchHandler: BookSearchService) {}
-}
 ```
 
 Points of interest in this component:
@@ -896,6 +896,7 @@ Now in our `app.component.html` template we can insert this new component:
 
 <app-book-search></app-book-search>
 <app-book-search-worker></app-book-search-worker>
+<app-book-search-multi-worker></app-book-search-multi-worker>
 
 ```
 

@@ -11,12 +11,10 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "embedme": "embedme posts/**/*.md",
-    "dev-to-git": "dev-to-git"
+    "embedme": "embedme posts/**/*.md"
   },
   "devDependencies": {
-    "@angular/bazel": "^8.0.2",
-    "embedme": "1.6.0",
+    "embedme": "1.17.1",
     "prettier": "^1.18.2",
     "ts-node": "^8.3.0"
   }
